@@ -1,7 +1,8 @@
 # level-of-deatil - Three.js Working example
 
 An example to test out Three.js LOD tool.
-Level of detial is used to improve rendering performance. If an assets is not near the camera, there is no need to show it in great detail.
+<br>
+Level of detail is used to improve rendering performance. If an assets is not near the camera, there is no need to show it in great detail.
 A great example of LOD in practice is Google Earth.
 
 For info: https://threejs.org/docs/#api/en/objects/LOD
