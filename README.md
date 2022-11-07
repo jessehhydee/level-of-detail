@@ -1,4 +1,4 @@
-# level-of-deatil - Three.js Working example
+# level-of-detail - Three.js Working example
 
 An example to test out Three.js LOD tool.
 <br>
