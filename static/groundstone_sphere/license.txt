@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ground//Stone Sphere
+* source:	https://sketchfab.com/3d-models/groundstone-sphere-1c0f2b2e213348e6a760743a546dc7a6
+* author:	Madee (https://sketchfab.com/Madeele)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ground//Stone Sphere" (https://sketchfab.com/3d-models/groundstone-sphere-1c0f2b2e213348e6a760743a546dc7a6) by Madee (https://sketchfab.com/Madeele) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
