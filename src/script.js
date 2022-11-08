@@ -12,9 +12,15 @@ camera,
 scene,
 light,
 renderer,
+lod,
 controls,
 iceSphere,
-groundSphere;
+groundSphere,
+cleanMemGroup,
+keepInMemGroup,
+gltfLoader,
+assetLoading,
+loadedAsset;
 
 
 const init = () => {
@@ -24,10 +30,15 @@ const init = () => {
     height: container.offsetHeight
   };
   
-  camera             = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 5000);
-  camera.position.z  = 500;
+  camera            = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 5000);
+  camera.position.z = 1200;
   
-  scene              = new THREE.Scene();
+  scene             = new THREE.Scene();
+
+  cleanMemGroup     = new THREE.Group(); 
+  keepInMemGroup    = new THREE.Group();
+  scene.add(cleanMemGroup);
+  scene.add(keepInMemGroup);
   
   light = new THREE.DirectionalLight(0xffffff);
   light.position.set(0, 0, 1).normalize();
@@ -39,12 +50,28 @@ const init = () => {
     alpha:      true
   });
   renderer.setPixelRatio(window.devicePixelRatio * 0.8);
+
+  gltfLoader    = new GLTFLoader();
+
+  assetLoading  = false;
+  lod           = [
+    {
+      asset:    'groundstone_sphere/scene.gltf',
+      distance: 50
+    },
+    {
+      asset:    'ice_sphere/scene.gltf',
+      distance: 1000
+    }
+  ]
   
   controls               = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   
   createWireframe();
-  createModel();
+  useThreeLOD();
+  cleanMemoryLOD(lod);
+  keepInMemoryLOD(lod);
   resize();
   listenTo();
   render();
@@ -75,14 +102,14 @@ const createWireframe = () => {
 
   }
 
-  lod.position.set(-170, 0, 0);
+  lod.position.set(-510, 0, 0);
   lod.updateMatrix();
   lod.matrixAutoUpdate = false;
   scene.add(lod);
 
 }
 
-const createModel = async () => {
+const useThreeLOD = async () => {
 
   const onLoad = async (gltf) => {
 
@@ -95,9 +122,9 @@ const createModel = async () => {
         break;
     }
 
-  }
+    return gltf.scene;
 
-  const gltfLoader = new GLTFLoader();
+  }
 
   gltfLoader.load('ice_sphere/scene.gltf', onLoad);
   gltfLoader.load('groundstone_sphere/scene.gltf', onLoad);
@@ -109,7 +136,7 @@ const createModel = async () => {
     lodModel.addLevel(iceSphere, 1000);
     lodModel.addLevel(groundSphere, 50);
   
-    lodModel.position.set(170, 0, 0);
+    lodModel.position.set(-170, 0, 0);
     lodModel.scale.set(1.5, 1.5, 1.5);
 
     lodModel.updateMatrix();
@@ -118,6 +145,64 @@ const createModel = async () => {
     scene.add(lodModel);
     
   }, 1000);
+
+}
+
+const cleanMemoryLOD = (details) => {
+
+  const distance = camera.position.distanceTo(new THREE.Vector3(170, 0, 0));
+
+  for(let i = 0; i < details.length; i++) {
+
+    let nextDistance = 100000;
+    if(i !== details.length - 1) nextDistance = details[i + 1].distance;
+
+    if(distance >= details[i].distance 
+        && distance < nextDistance
+        && details[i].asset !== loadedAsset) gltfLoader.load(details[i].asset, (gltf) => {
+            cleanMemGroup.remove(...cleanMemGroup.children);
+            gltf.scene.position.set(170, 0, 0);
+            gltf.scene.scale.set(1.5, 1.5, 1.5);
+            cleanMemGroup.add(gltf.scene);
+            loadedAsset = details[i].asset;
+          });
+
+  }
+
+}
+
+const keepInMemoryLOD = (details) => {
+
+  const distance = camera.position.distanceTo(new THREE.Vector3(510, 0, 0));
+
+  for(let i = 0; i < details.length; i++) {
+
+    let nextDistance = 100000;
+    if(i !== details.length - 1) nextDistance = details[i + 1].distance;
+
+    if(distance >= details[i].distance 
+        && distance < nextDistance
+        && !assetLoading
+        && keepInMemGroup.children.filter(el => el.name === details[i].asset).length === 0) {
+          
+          assetLoading = true;
+
+          gltfLoader.load(details[i].asset, (gltf) => {
+            gltf.scene.position.set(510, 0, 0);
+            gltf.scene.scale.set(1.5, 1.5, 1.5);
+            gltf.scene.name = details[i].asset;
+            keepInMemGroup.add(gltf.scene);
+            assetLoading = false;
+            return;
+          });
+
+    }
+
+    if(distance >= details[i].distance 
+        && distance < nextDistance
+        && !assetLoading) keepInMemGroup.children.forEach(el => el.name === details[i].asset ? el.visible = true : el.visible = false);
+
+  }
 
 }
 
@@ -138,6 +223,10 @@ const resize = () => {
 const listenTo = () => {
 
   window.addEventListener('resize', resize.bind(this));
+  controls.addEventListener('change', () => {
+    cleanMemoryLOD(lod);
+    keepInMemoryLOD(lod);
+  });
 
 }
 
