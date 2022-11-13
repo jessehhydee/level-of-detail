@@ -74,6 +74,7 @@ const init = () => {
   controls               = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   
+  createAllLabels();
   createWireframe();
   useThreeLOD();
   cleanMemoryLOD(lod);
@@ -95,8 +96,6 @@ const init = () => {
  * Add LOD to scene.
  */
 const createWireframe = () => {
-
-  createLabel('THREE.LOD', new THREE.Vector3(-510, 200, 0));
 
   const geometry  = [
     [new THREE.IcosahedronGeometry( 100, 16 ), 50],
@@ -127,8 +126,6 @@ const createWireframe = () => {
 }
 
 const useThreeLOD = async () => {
-
-  createLabel('THREE.LOD', new THREE.Vector3(-170, 200, 0));
 
   const onLoad = async (gltf) => {
 
@@ -169,8 +166,6 @@ const useThreeLOD = async () => {
 
 const cleanMemoryLOD = (details) => {
 
-  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(170, 200, 0));
-
   const distance = camera.position.distanceTo(new THREE.Vector3(170, 0, 0));
 
   for(let i = 0; i < details.length; i++) {
@@ -193,8 +188,6 @@ const cleanMemoryLOD = (details) => {
 }
 
 const keepInMemoryLOD = (details) => {
-
-  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(510, 200, 0));
 
   const distance = camera.position.distanceTo(new THREE.Vector3(510, 0, 0));
 
@@ -226,6 +219,15 @@ const keepInMemoryLOD = (details) => {
         && !assetLoading) keepInMemGroup.children.forEach(el => el.name === details[i].asset ? el.visible = true : el.visible = false);
 
   }
+
+}
+
+const createAllLabels = () => {
+
+  createLabel('THREE.LOD', new THREE.Vector3(-510, 200, 0));                  // createWireframe()
+  createLabel('THREE.LOD', new THREE.Vector3(-170, 200, 0));                  // useThreeLOD()
+  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(170, 200, 0));    // cleanMemoryLOD()
+  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(510, 200, 0));     // keepInMemoryLOD()
 
 }
 
