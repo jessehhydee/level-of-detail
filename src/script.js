@@ -33,7 +33,7 @@ const init = () => {
   };
   
   camera            = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 5000);
-  camera.position.z = 1200;
+  camera.position.z = 1800;
   
   scene             = new THREE.Scene();
 
@@ -79,6 +79,7 @@ const init = () => {
   useThreeLOD();
   cleanMemoryLOD(lod);
   keepInMemoryLOD(lod);
+  terrainToPlane();
   resize();
   listenTo();
   render();
@@ -108,17 +109,13 @@ const createWireframe = () => {
   const material  = new THREE.MeshLambertMaterial({color: 0xffffff, wireframe: true});
   const lod       = new THREE.LOD();
 
-  for ( let i = 0; i < geometry.length; i ++ ) {
-
+  for(let i = 0; i < geometry.length; i ++) {
     const mesh = new THREE.Mesh(geometry[i][0], material);
     mesh.scale.set(1.5, 1.5, 1.5);
-    mesh.updateMatrix();
-    mesh.matrixAutoUpdate = false;
     lod.addLevel(mesh, geometry[i][1]);
-
   }
 
-  lod.position.set(-510, 0, 0);
+  lod.position.set(-680, 0, 0);
   lod.updateMatrix();
   lod.matrixAutoUpdate = false;
   scene.add(lod);
@@ -152,7 +149,7 @@ const useThreeLOD = async () => {
     lodModel.addLevel(iceSphere, 1000);
     lodModel.addLevel(groundSphere, 50);
   
-    lodModel.position.set(-170, 0, 0);
+    lodModel.position.set(-340, 0, 0);
     lodModel.scale.set(1.5, 1.5, 1.5);
 
     lodModel.updateMatrix();
@@ -166,7 +163,7 @@ const useThreeLOD = async () => {
 
 const cleanMemoryLOD = (details) => {
 
-  const distance = camera.position.distanceTo(new THREE.Vector3(170, 0, 0));
+  const distance = camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
 
   for(let i = 0; i < details.length; i++) {
 
@@ -177,7 +174,7 @@ const cleanMemoryLOD = (details) => {
         && distance < nextDistance
         && details[i].asset !== loadedAsset) gltfLoader.load(details[i].asset, (gltf) => {
             cleanMemGroup.remove(...cleanMemGroup.children);
-            gltf.scene.position.set(170, 0, 0);
+            gltf.scene.position.set(0, 0, 0);
             gltf.scene.scale.set(1.5, 1.5, 1.5);
             cleanMemGroup.add(gltf.scene);
             loadedAsset = details[i].asset;
@@ -189,7 +186,7 @@ const cleanMemoryLOD = (details) => {
 
 const keepInMemoryLOD = (details) => {
 
-  const distance = camera.position.distanceTo(new THREE.Vector3(510, 0, 0));
+  const distance = camera.position.distanceTo(new THREE.Vector3(340, 0, 0));
 
   for(let i = 0; i < details.length; i++) {
 
@@ -204,7 +201,7 @@ const keepInMemoryLOD = (details) => {
           assetLoading = true;
 
           gltfLoader.load(details[i].asset, (gltf) => {
-            gltf.scene.position.set(510, 0, 0);
+            gltf.scene.position.set(340, 0, 0);
             gltf.scene.scale.set(1.5, 1.5, 1.5);
             gltf.scene.name = details[i].asset;
             keepInMemGroup.add(gltf.scene);
@@ -222,12 +219,70 @@ const keepInMemoryLOD = (details) => {
 
 }
 
+/**
+ * This is an example of how one can change a 3D terrain asset into a plane when the user is not near the particular terrain section.
+ * When the terrain tile/section is changed to a plane, we overlay the plane with the terrains texture.
+ * By doing this, we reduce all vertices in the tile to 4 (a plane contains 4 vertices), keep it looking visually recognisable due to the texture still being the same, and overall improve rendering performance.
+ */
+const terrainToPlane = () => {
+
+  let   plane;
+  const lodTerrain = new THREE.LOD();
+
+  const onLoad = async (gltf) => {
+
+
+    if(gltf.scene.children[0].children[0].children[0].children[0] instanceof THREE.Mesh) {
+  
+      const gltfMin = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.min;
+      const gltfMax = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.max;
+  
+      const size = {
+        height: gltfMax.z - gltfMin.z,
+        width:  gltfMax.x - gltfMin.x,
+        depth:  gltfMax.y - gltfMin.y
+      };
+  
+      const geometry    = new THREE.PlaneGeometry(size.width, size.depth);
+      const texture     = new THREE.TextureLoader().load('terrain/textures/Hills_baseColor.png');
+      texture.flipY     = false;
+      const material    = new THREE.MeshLambertMaterial({map: texture, side: THREE.DoubleSide});
+      plane             = new THREE.Mesh(geometry, material);
+      plane.position.set(680, 0, 0);
+      plane.scale.set(150, 150, 150);
+      plane.rotation.x  = -(Math.PI / 2) * 0.7;
+  
+    }
+
+    gltf.scene.position.set(680, 0, 0);
+    gltf.scene.scale.set(150, 150, 150);
+    gltf.scene.rotation.x = 0.6;
+  
+    setTimeout(() => {
+    
+      lodTerrain.addLevel(gltf.scene, 50);
+      lodTerrain.addLevel(plane, 1000);
+  
+      lodTerrain.updateMatrix();
+      lodTerrain.matrixAutoUpdate = false;
+  
+      scene.add(lodTerrain);
+      
+    }, 1000);
+
+  }
+
+  gltfLoader.load('terrain/scene.gltf', onLoad);
+
+}
+
 const createAllLabels = () => {
 
-  createLabel('THREE.LOD', new THREE.Vector3(-510, 200, 0));                  // createWireframe()
-  createLabel('THREE.LOD', new THREE.Vector3(-170, 200, 0));                  // useThreeLOD()
-  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(170, 200, 0));    // cleanMemoryLOD()
-  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(510, 200, 0));     // keepInMemoryLOD()
+  createLabel('THREE.LOD', new THREE.Vector3(-680, 200, 0));                  // createWireframe()
+  createLabel('THREE.LOD', new THREE.Vector3(-340, 200, 0));                  // useThreeLOD()
+  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(0, 200, 0));      // cleanMemoryLOD()
+  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(340, 200, 0));     // keepInMemoryLOD()
+  createLabel('Terrain to Plane', new THREE.Vector3(680, 200, 0));            // terrainToPlane()
 
 }
 
