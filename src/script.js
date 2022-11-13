@@ -122,6 +122,15 @@ const createWireframe = () => {
 
 }
 
+/**
+ * USES THREE LOD.
+ * 
+ * Loads two different sphere models and stores them each to a unique variable for later reference.
+ * 
+ * Set up THREE.LOD and pass it each sphere model with different level thresholds.
+ * 
+ * Add LOD to scene.
+ */
 const useThreeLOD = async () => {
 
   const onLoad = async (gltf) => {
@@ -161,6 +170,34 @@ const useThreeLOD = async () => {
 
 }
 
+/**
+ * This is called everytime controls update, ie. user moves around the scene.
+ * 
+ * @param details - Array containing asset and distance information for each level.
+ *                  lod = [
+                            {
+                              asset:    'groundstone_sphere/scene.gltf',
+                              distance: 50
+                            },
+                            {
+                              asset:    'ice_sphere/scene.gltf',
+                              distance: 1000
+                            }
+                          ]
+
+   Get distance between camera and objects center point.
+
+   Loop through @var details
+   For each level, capture the next levels distance threshold.
+   If there isn't a next level, the next distance will be 100000 (for no particualr reason other then it's far away).
+
+   If asset not currently loaded and the distance is in the range of the assets level, load the new GLTF.
+   After loading, clear everything in cleanMemGroup.
+   This removes the previous asset from memory.
+
+   Add new GLTF to cleanMemGroup.
+
+ */
 const cleanMemoryLOD = (details) => {
 
   const distance = camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
@@ -184,6 +221,35 @@ const cleanMemoryLOD = (details) => {
 
 }
 
+/**
+ * This is called everytime controls update, ie. user moves around the scene.
+ * 
+ * @param details - Array containing asset and distance information for each level.
+ *                  lod = [
+                            {
+                              asset:    'groundstone_sphere/scene.gltf',
+                              distance: 50
+                            },
+                            {
+                              asset:    'ice_sphere/scene.gltf',
+                              distance: 1000
+                            }
+                          ]
+
+   Get distance between camera and objects center point.
+
+   Loop through @var details
+   For each level, capture the next levels distance threshold.
+   If there isn't a next level, the next distance will be 100000 (for no particualr reason other then it's far away).
+
+   If asset not currently loaded within keepInMemGroup and the distance is in the range of the assets level, 
+   and a asset is not currently loading (this process isn't already happening in the dom), load gltf asset.
+   After loading, add new GLTF to keepInMemGroup.
+
+   If the asset is already loaded within keepInMemGroup and the distance is in the range of the assets level, 
+   and an asset is not currently loading, loop through keepInMemGroup's children (gltf's) and make current asset visible, and leave all others invisible.
+
+ */
 const keepInMemoryLOD = (details) => {
 
   const distance = camera.position.distanceTo(new THREE.Vector3(340, 0, 0));
@@ -231,8 +297,7 @@ const terrainToPlane = () => {
 
   const onLoad = async (gltf) => {
 
-
-    if(gltf.scene.children[0].children[0].children[0].children[0] instanceof THREE.Mesh) {
+    if(gltf.scene.children[0].children[0].children[0].children[0] instanceof THREE.Mesh) {      // Will need to revisit how deep the MESH is on each use case
   
       const gltfMin = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.min;
       const gltfMax = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.max;
@@ -313,6 +378,7 @@ const resize = () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize(sizes.width, sizes.height);
+  labelRenderer.setSize(sizes.width, sizes.height);
 
 }
 
