@@ -2,6 +2,7 @@ import './style.css'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 
 const container  = document.querySelector('.container');
@@ -12,6 +13,7 @@ camera,
 scene,
 light,
 renderer,
+labelRenderer,
 lod,
 controls,
 iceSphere,
@@ -51,6 +53,10 @@ const init = () => {
   });
   renderer.setPixelRatio(window.devicePixelRatio * 0.8);
 
+  labelRenderer = new CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(labelRenderer.domElement);
+
   gltfLoader    = new GLTFLoader();
 
   assetLoading  = false;
@@ -78,8 +84,19 @@ const init = () => {
 
 }
 
-
+/**
+ * USES THREE LOD.
+ * 
+ * Creates many geometric spheres with varying detail (vertices) and level distances.
+ * Store them in @var geometry.
+ * 
+ * Loop through spheres, create mesh for each one & add each mesh as a level.
+ * 
+ * Add LOD to scene.
+ */
 const createWireframe = () => {
+
+  createLabel('THREE.LOD', new THREE.Vector3(-510, 200, 0));
 
   const geometry  = [
     [new THREE.IcosahedronGeometry( 100, 16 ), 50],
@@ -110,6 +127,8 @@ const createWireframe = () => {
 }
 
 const useThreeLOD = async () => {
+
+  createLabel('THREE.LOD', new THREE.Vector3(-170, 200, 0));
 
   const onLoad = async (gltf) => {
 
@@ -150,6 +169,8 @@ const useThreeLOD = async () => {
 
 const cleanMemoryLOD = (details) => {
 
+  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(170, 200, 0));
+
   const distance = camera.position.distanceTo(new THREE.Vector3(170, 0, 0));
 
   for(let i = 0; i < details.length; i++) {
@@ -172,6 +193,8 @@ const cleanMemoryLOD = (details) => {
 }
 
 const keepInMemoryLOD = (details) => {
+
+  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(510, 200, 0));
 
   const distance = camera.position.distanceTo(new THREE.Vector3(510, 0, 0));
 
@@ -206,6 +229,22 @@ const keepInMemoryLOD = (details) => {
 
 }
 
+const createLabel = (label, position) => {
+  
+  const locationLabelChild      = document.createElement('div');
+  locationLabelChild.className  = 'label';
+  const locationLabelText       = document.createElement('p');
+  locationLabelText.textContent = label;
+
+  locationLabelChild.appendChild(locationLabelText);
+
+  const locationLabel = new CSS2DObject(locationLabelChild);
+  locationLabel.position.set(position.x, position.y, position.z);
+
+  scene.add(locationLabel);
+
+}
+
 const resize = () => {
 
   sizes = {
@@ -234,6 +273,7 @@ const render = () => {
 
   controls.update();
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
   requestAnimationFrame(render.bind(this))
 
 }
