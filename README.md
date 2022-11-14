@@ -7,6 +7,12 @@ A great example of LOD in practice is Google Earth.
 
 For info: https://threejs.org/docs/#api/en/objects/LOD
 
+### To Run:
+
+`npm run dev`
+
+### Contents:
+
 The application displays 5 LOD examples:
 
 <ol>
@@ -33,11 +39,13 @@ The application displays 5 LOD examples:
   </li>
 </ol>
 
-### Default State Of App on Load (low detailed versions)(in order of above list)
+### Default State Of App on Load (low detailed versions)(in order of above list):
 ![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/static/default_state.png?raw=true)
 
-### Updated State Of Some Examples
+### Updated State Of Some Examples:
 ![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/static/changed_states.png?raw=true)
+
+### Con's Of THREE.LOD:
 
 Con's I have come across regarding the available three.js LOD tool:
 <ul>
