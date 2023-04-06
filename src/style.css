@@ -21,13 +21,37 @@ html, body {
   left: 0px;
 }
 
-.label {
-  color: #2f2f2f;
-  font-family: sans-serif;
-  padding: 1px 20px;
-  border-radius: 6px;
-  border: 2px solid #868686;
-  background: #ffffff;
-  font-size: 11px;
-  z-index: 1;
+.nav {
+  position: absolute;
+  bottom: 40px;
+  left: 0px;
+  right: 0px;
+  z-index: 10;
+  margin: 0 auto;
+  width: 400px;
+  height: auto;
+  display: flex;
+  justify-content: space-between;
+}
+
+.nav_btn {
+  border-radius: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 30px;
+  gap: 15px;
+  border: 1px solid #FFFFFF;
+  width: fit-content;
+  height: fit-content;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+  background: inherit;
+  transition: 400ms ease-in-out;
+} 
+.nav_btn:hover {
+  gap: 25px;
 }

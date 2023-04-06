@@ -1,8 +1,9 @@
 import './style.css'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { DoubleSide } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { gsap } from "gsap";
 
 
 const container  = document.querySelector('.container');
@@ -11,18 +12,34 @@ const canvas     = document.querySelector('.canvas');
 let sizes,
 camera,
 scene,
-light,
 renderer,
-labelRenderer,
-lod,
+allObjects,
+activeObj,
+rockLOD,
 controls,
-iceSphere,
-groundSphere,
 cleanMemGroup,
 keepInMemGroup,
 gltfLoader,
 assetLoading,
 loadedAsset;
+
+allObjects    = [];
+activeObj     = -1;
+assetLoading  = false;
+rockLOD       = [
+  {
+    asset:          'high-poly-rock/scene.gltf',
+    distance:       50,
+    scale:          new THREE.Vector3(80, 80, 80),
+    posYAdjustment: -3
+  },
+  {
+    asset:          'low-poly-rock/scene.gltf',
+    distance:       80,
+    scale:          new THREE.Vector3(40, 40, 40),
+    posYAdjustment: 3
+  }
+];
 
 
 const init = () => {
@@ -31,20 +48,8 @@ const init = () => {
     width:  container.offsetWidth,
     height: container.offsetHeight
   };
-  
-  camera            = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 5000);
-  camera.position.z = 1800;
-  
-  scene             = new THREE.Scene();
 
-  cleanMemGroup     = new THREE.Group(); 
-  keepInMemGroup    = new THREE.Group();
-  scene.add(cleanMemGroup);
-  scene.add(keepInMemGroup);
-  
-  light = new THREE.DirectionalLight(0xffffff);
-  light.position.set(0, 0, 1).normalize();
-  scene.add(light);
+  scene = new THREE.Scene();
       
   renderer = new THREE.WebGLRenderer({
     canvas:     canvas,
@@ -53,36 +58,63 @@ const init = () => {
   });
   renderer.setPixelRatio(window.devicePixelRatio * 0.8);
 
-  labelRenderer = new CSS2DRenderer();
-  labelRenderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(labelRenderer.domElement);
+  camera            = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 1000);
+  camera.position.z = 40;
 
-  gltfLoader    = new GLTFLoader();
-
-  assetLoading  = false;
-  lod           = [
-    {
-      asset:    'groundstone_sphere/scene.gltf',
-      distance: 50
-    },
-    {
-      asset:    'ice_sphere/scene.gltf',
-      distance: 1000
-    }
-  ]
-  
   controls               = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
+
+  scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 1));
+  // scene.add(new THREE.AmbientLight(0xffffbb, 2));
+
+  gltfLoader = new GLTFLoader();
   
-  createAllLabels();
+  setOuterSphere();
+  setCleanMemGroup();
+  setKeepInMemGroup();
   createWireframe();
-  useThreeLOD();
-  cleanMemoryLOD(lod);
-  keepInMemoryLOD(lod);
+  useThreeLOD(rockLOD);
+  cleanMemoryLOD(rockLOD);
+  keepInMemoryLOD(rockLOD);
   terrainToPlane();
+  loopThrough();
   resize();
   listenTo();
   render();
+
+}
+
+const setOuterSphere = () => {
+
+  const panoSphere    = new THREE.SphereGeometry(160, 50, 50);
+  const panoMaterial  = new THREE.MeshStandardMaterial({
+    color:  new THREE.Color(0, 0.133, 0.118),
+    side:   DoubleSide,
+  });
+
+  scene.add(new THREE.Mesh(panoSphere, panoMaterial));
+  
+}
+
+const setCleanMemGroup = () => {
+
+  cleanMemGroup = new THREE.Group();
+  cleanMemGroup.scale.set(40, 40, 40);
+  cleanMemGroup.position.set(0, 0, -200);
+
+  allObjects[2] = cleanMemGroup;
+  scene.add(cleanMemGroup);
+
+}
+
+const setKeepInMemGroup = () => {
+
+  keepInMemGroup  = new THREE.Group();
+  keepInMemGroup.scale.set(40, 40, 40);
+  keepInMemGroup.position.set(0, 0, -200);
+
+  allObjects[3] = keepInMemGroup;
+  scene.add(keepInMemGroup);
 
 }
 
@@ -99,25 +131,27 @@ const init = () => {
 const createWireframe = () => {
 
   const geometry  = [
-    [new THREE.IcosahedronGeometry( 100, 16 ), 50],
-    [new THREE.IcosahedronGeometry( 100, 8 ), 300],
-    [new THREE.IcosahedronGeometry( 100, 4 ), 1000],
-    [new THREE.IcosahedronGeometry( 100, 2 ), 2000],
-    [new THREE.IcosahedronGeometry( 100, 1 ), 8000]
+    [new THREE.IcosahedronGeometry( 100, 16 ), 10],
+    [new THREE.IcosahedronGeometry( 100, 8 ), 30],
+    [new THREE.IcosahedronGeometry( 100, 4 ), 50],
+    [new THREE.IcosahedronGeometry( 100, 2 ), 60],
+    [new THREE.IcosahedronGeometry( 100, 1 ), 80]
   ];
 
-  const material  = new THREE.MeshLambertMaterial({color: 0xffffff, wireframe: true});
-  const lod       = new THREE.LOD();
+  const material  = new THREE.MeshLambertMaterial({
+    color:      0xffffff, 
+    wireframe:  true
+  });
+  const lod = new THREE.LOD();
 
   for(let i = 0; i < geometry.length; i ++) {
     const mesh = new THREE.Mesh(geometry[i][0], material);
-    mesh.scale.set(1.5, 1.5, 1.5);
+    mesh.scale.set(0.1, 0.1, 0.1);
     lod.addLevel(mesh, geometry[i][1]);
   }
 
-  lod.position.set(-680, 0, 0);
-  lod.updateMatrix();
-  lod.matrixAutoUpdate = false;
+  lod.position.set(0, 0, -200);
+  allObjects[0] = lod;
   scene.add(lod);
 
 }
@@ -131,42 +165,21 @@ const createWireframe = () => {
  * 
  * Add LOD to scene.
  */
-const useThreeLOD = async () => {
-
-  const onLoad = async (gltf) => {
-
-    switch(gltf.scene.name) {
-      case 'ice_sphere':
-        iceSphere = gltf.scene;
-        break;
-      case 'ground_sphere':
-        groundSphere = gltf.scene;
-        break;
-    }
-
-    return gltf.scene;
-
-  }
-
-  gltfLoader.load('ice_sphere/scene.gltf', onLoad);
-  gltfLoader.load('groundstone_sphere/scene.gltf', onLoad);
+const useThreeLOD = async (details) => {
 
   const lodModel = new THREE.LOD();
 
-  setTimeout(() => {
-  
-    lodModel.addLevel(iceSphere, 1000);
-    lodModel.addLevel(groundSphere, 50);
-  
-    lodModel.position.set(-340, 0, 0);
-    lodModel.scale.set(1.5, 1.5, 1.5);
+  for(let i = 0; i < details.length; i++) {
 
-    lodModel.updateMatrix();
-    lodModel.matrixAutoUpdate = false;
-
-    scene.add(lodModel);
+    const model = await gltfLoader.loadAsync(details[i].asset);
+    model.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
+    model.scene.position.set(0, details[i].posYAdjustment, -200);
+    lodModel.addLevel(model.scene, details[i].distance);
     
-  }, 1000);
+  }
+
+  allObjects[1] = lodModel;
+  scene.add(lodModel);
 
 }
 
@@ -211,8 +224,6 @@ const cleanMemoryLOD = (details) => {
         && distance < nextDistance
         && details[i].asset !== loadedAsset) gltfLoader.load(details[i].asset, (gltf) => {
             cleanMemGroup.remove(...cleanMemGroup.children);
-            gltf.scene.position.set(0, 0, 0);
-            gltf.scene.scale.set(1.5, 1.5, 1.5);
             cleanMemGroup.add(gltf.scene);
             loadedAsset = details[i].asset;
           });
@@ -267,8 +278,6 @@ const keepInMemoryLOD = (details) => {
           assetLoading = true;
 
           gltfLoader.load(details[i].asset, (gltf) => {
-            gltf.scene.position.set(340, 0, 0);
-            gltf.scene.scale.set(1.5, 1.5, 1.5);
             gltf.scene.name = details[i].asset;
             keepInMemGroup.add(gltf.scene);
             assetLoading = false;
@@ -290,80 +299,67 @@ const keepInMemoryLOD = (details) => {
  * When the terrain tile/section is changed to a plane, we overlay the plane with the terrains texture.
  * By doing this, we reduce all vertices in the tile to 4 (a plane contains 4 vertices), keep it looking visually recognisable due to the texture still being the same, and overall improve rendering performance.
  */
-const terrainToPlane = () => {
+const terrainToPlane = async () => {
 
   let   plane;
-  const lodTerrain = new THREE.LOD();
+  const lodTerrain  = new THREE.LOD();
+  const model       = await gltfLoader.loadAsync('terrain/scene.gltf');
 
-  const onLoad = async (gltf) => {
+  model.scene.traverse(obj => {
+    if(obj instanceof THREE.Mesh) {
 
-    if(gltf.scene.children[0].children[0].children[0].children[0] instanceof THREE.Mesh) {      // Will need to revisit how deep the MESH is on each use case
-  
-      const gltfMin = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.min;
-      const gltfMax = gltf.scene.children[0].children[0].children[0].children[0].geometry.boundingBox.max;
-  
+      const gltfMin = obj.geometry.boundingBox.min;
+      const gltfMax = obj.geometry.boundingBox.max;
+
       const size = {
         height: gltfMax.z - gltfMin.z,
         width:  gltfMax.x - gltfMin.x,
         depth:  gltfMax.y - gltfMin.y
       };
-  
+
       const geometry    = new THREE.PlaneGeometry(size.width, size.depth);
       const texture     = new THREE.TextureLoader().load('terrain/textures/Hills_baseColor.png');
       texture.flipY     = false;
       const material    = new THREE.MeshLambertMaterial({map: texture, side: THREE.DoubleSide});
       plane             = new THREE.Mesh(geometry, material);
-      plane.position.set(680, 0, 0);
-      plane.scale.set(150, 150, 150);
       plane.rotation.x  = -(Math.PI / 2) * 0.7;
-  
+
     }
+  });
 
-    gltf.scene.position.set(680, 0, 0);
-    gltf.scene.scale.set(150, 150, 150);
-    gltf.scene.rotation.x = 0.6;
-  
-    setTimeout(() => {
-    
-      lodTerrain.addLevel(gltf.scene, 50);
-      lodTerrain.addLevel(plane, 1000);
-  
-      lodTerrain.updateMatrix();
-      lodTerrain.matrixAutoUpdate = false;
-  
-      scene.add(lodTerrain);
-      
-    }, 1000);
+  model.scene.rotation.x = 0.6;
 
+  lodTerrain.position.set(0, 0, -200);
+  lodTerrain.scale.set(10, 10, 10);
+
+  lodTerrain.addLevel(model.scene, 50);
+  lodTerrain.addLevel(plane, 80);
+
+  allObjects[4] = lodTerrain;
+  scene.add(lodTerrain);
+
+}
+
+const loopThrough = () => {
+
+  const tl = gsap.timeline();
+  if(activeObj >= 0) {
+    tl
+    .to(allObjects[activeObj].position, {
+      z:        -200,
+      duration: 2
+    })
+    .to(allObjects[activeObj + 1 > activeObj.length - 1 ? 0 : activeObj + 1].position, {
+      z:        0,
+      duration: 2
+    });
+    return;
   }
 
-  gltfLoader.load('terrain/scene.gltf', onLoad);
-
-}
-
-const createAllLabels = () => {
-
-  createLabel('THREE.LOD', new THREE.Vector3(-680, 200, 0));                  // createWireframe()
-  createLabel('THREE.LOD', new THREE.Vector3(-340, 200, 0));                  // useThreeLOD()
-  createLabel('Lazy Load & Clear Memory', new THREE.Vector3(0, 200, 0));      // cleanMemoryLOD()
-  createLabel('Lazy Load & Keep Memory', new THREE.Vector3(340, 200, 0));     // keepInMemoryLOD()
-  createLabel('Terrain to Plane', new THREE.Vector3(680, 200, 0));            // terrainToPlane()
-
-}
-
-const createLabel = (label, position) => {
-  
-  const locationLabelChild      = document.createElement('div');
-  locationLabelChild.className  = 'label';
-  const locationLabelText       = document.createElement('p');
-  locationLabelText.textContent = label;
-
-  locationLabelChild.appendChild(locationLabelText);
-
-  const locationLabel = new CSS2DObject(locationLabelChild);
-  locationLabel.position.set(position.x, position.y, position.z);
-
-  scene.add(locationLabel);
+  tl.to(allObjects[0].position, {
+    z:        0,
+    duration: 2
+  });
 
 }
 
@@ -378,7 +374,6 @@ const resize = () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize(sizes.width, sizes.height);
-  labelRenderer.setSize(sizes.width, sizes.height);
 
 }
 
@@ -386,8 +381,8 @@ const listenTo = () => {
 
   window.addEventListener('resize', resize.bind(this));
   controls.addEventListener('change', () => {
-    cleanMemoryLOD(lod);
-    keepInMemoryLOD(lod);
+    cleanMemoryLOD(rockLOD);
+    keepInMemoryLOD(rockLOD);
   });
 
 }
@@ -396,7 +391,6 @@ const render = () => {
 
   controls.update();
   renderer.render(scene, camera);
-  labelRenderer.render(scene, camera);
   requestAnimationFrame(render.bind(this))
 
 }

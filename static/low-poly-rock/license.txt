@@ -1,0 +1,11 @@
+Model Information:
+* title:	Stylized lowpoly rock
+* source:	https://sketchfab.com/3d-models/stylized-lowpoly-rock-6e476441b5614231bf4e8de194c418d9
+* author:	Bull studios (https://sketchfab.com/dzemalmclaren)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Stylized lowpoly rock" (https://sketchfab.com/3d-models/stylized-lowpoly-rock-6e476441b5614231bf4e8de194c418d9) by Bull studios (https://sketchfab.com/dzemalmclaren) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
