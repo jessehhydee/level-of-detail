@@ -131,3 +131,48 @@ html, body {
 .source_btn {
   padding: 10px;
 }
+
+@media only screen and (max-width: 900px) {
+  .nav {
+    width: 300px;
+  }
+}
+@media only screen and (max-width: 700px) {
+  .title_container {
+    width: 350px;
+  }
+  .about_btn {
+    padding: 10px;
+  }
+  .about_btn_text {
+    display: none;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .title_container {
+    width: 280px;
+  }
+  .title {
+    font-size: 30px;
+  }
+  .about_container {
+    width: 150px;
+    bottom: 110px;
+    left: 25px;
+  }
+  .about_text_container {
+    background-color: #fff;
+  }
+  .about_button_container {
+    bottom: 120px;
+  }
+  .nav {
+    width: 270px;
+  }
+  .btn {
+    gap: 5px;
+  }
+  .source_code {
+    bottom: 120px;
+  }
+}
