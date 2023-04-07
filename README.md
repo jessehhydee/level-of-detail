@@ -7,13 +7,9 @@ A great example of LOD in practice is Google Earth.
 
 For info: https://threejs.org/docs/#api/en/objects/LOD
 
-### To Run:
+### Viewer Contents:
 
-`npm run dev`
-
-### Contents:
-
-The application displays 5 LOD examples:
+The viewer application displays 5 LOD examples:
 
 <ol>
   <li>
@@ -39,11 +35,16 @@ The application displays 5 LOD examples:
   </li>
 </ol>
 
-### Default State Of App on Load (low detailed versions)(in order of above list):
-![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/static/default_state.png?raw=true)
+![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/viewer/screenshots/landing-page.png?raw=true)
 
-### Updated State Of Some Examples:
-![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/static/changed_states.png?raw=true)
+![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/viewer/screenshots/terrain-to-plane.png?raw=true)
+
+To view, checkout: https://hydeit.co/level-of-detail
+
+### Tools
+
+Each file under tools contains an example of how to use its feature.
+No files contain actual scenes that can be served - files are simply for reference.
 
 ### Con's Of THREE.LOD:
 
