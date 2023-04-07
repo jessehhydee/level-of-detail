@@ -9,6 +9,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.151.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.151.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js" integrity="sha512-cOH8ndwGgPo+K7pTvMrqYbmI8u8k6Sho3js0gOqVWTmQMlLIi6TbqGWRTpf1ga8ci9H3iPsvDLr4X7xwhC/+DQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
   </head>
 
 
@@ -19,7 +32,7 @@
     </div>
 
     <div class="nav">
-      <button class="nav_btn back" onclick="loopThrough()">
+      <button class="nav_btn back">
         <svg width="25px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" transform="rotate(0)">
           <g id="SVGRepo_bgCarrier" stroke-width="0"/>
           <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
@@ -27,7 +40,7 @@
         </svg>
         Back
       </button>
-      <button class="nav_btn next" onclick="loopThrough()">
+      <button class="nav_btn next">
         Next
         <svg width="25px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" transform="rotate(180)">
           <g id="SVGRepo_bgCarrier" stroke-width="0"/>
@@ -36,6 +49,8 @@
         </svg>
       </button>
     </div>
+
+    <script src="index.js" type="module"></script>
 
   </body>
 

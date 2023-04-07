@@ -1,18 +1,28 @@
-import './style.css'
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DoubleSide } from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { gsap } from "gsap";
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
 
-const container  = document.querySelector('.container');
-const canvas     = document.querySelector('.canvas');
+const container = document.querySelector('.container');
+const canvas    = document.querySelector('.canvas');
+const backBtn   = document.querySelector('.back');
+const nextBtn   = document.querySelector('.next');
 
-let sizes,
+let 
+time,
+rotateObj,
+sizes,
 camera,
 scene,
 renderer,
+composer,
+renderPass,
+outlinePass,
 allObjects,
 activeObj,
 rockLOD,
@@ -23,21 +33,23 @@ gltfLoader,
 assetLoading,
 loadedAsset;
 
+time          = 0;
+rotateObj     = false;
 allObjects    = [];
 activeObj     = -1;
 assetLoading  = false;
 rockLOD       = [
   {
-    asset:          'high-poly-rock/scene.gltf',
-    distance:       50,
+    asset:          'img/high-poly-rock/scene.gltf',
+    distance:       0,
     scale:          new THREE.Vector3(80, 80, 80),
-    posYAdjustment: -3
+    posYAdjustment: -5
   },
   {
-    asset:          'low-poly-rock/scene.gltf',
-    distance:       80,
-    scale:          new THREE.Vector3(40, 40, 40),
-    posYAdjustment: 3
+    asset:          'img/low-poly-rock/scene.gltf',
+    distance:       36,
+    scale:          new THREE.Vector3(800, 800, 800),
+    posYAdjustment: 0
   }
 ];
 
@@ -50,22 +62,22 @@ const init = () => {
   };
 
   scene = new THREE.Scene();
-      
-  renderer = new THREE.WebGLRenderer({
-    canvas:     canvas,
-    antialias:  false,
-    alpha:      true
-  });
-  renderer.setPixelRatio(window.devicePixelRatio * 0.8);
 
   camera            = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 1, 1000);
   camera.position.z = 40;
+      
+  renderer = new THREE.WebGLRenderer({canvas: canvas});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  composer = new EffectComposer(renderer);
+  composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  renderPass  = new RenderPass(scene, camera);
+  outlinePass = setOutlinePass();
+  composer.addPass(renderPass);
+  composer.addPass(outlinePass);
 
-  controls               = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-
-  scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 1));
-  // scene.add(new THREE.AmbientLight(0xffffbb, 2));
+  setControls();
+  setLights();
 
   gltfLoader = new GLTFLoader();
   
@@ -77,12 +89,60 @@ const init = () => {
   cleanMemoryLOD(rockLOD);
   keepInMemoryLOD(rockLOD);
   terrainToPlane();
-  loopThrough();
+  loopThrough(true);
   resize();
   listenTo();
   render();
 
 }
+
+const setOutlinePass = () => {
+
+  const outlinePass = new OutlinePass(
+    new THREE.Vector2(sizes.width, sizes.height),
+    scene,
+    camera
+  );
+  outlinePass.edgeStrength = 1;
+  outlinePass.edgeGlow = 5;
+  outlinePass.edgeThickness = 17;
+  outlinePass.visibleEdgeColor.set('#ffffff');
+
+  return outlinePass;
+  
+};
+
+const setControls = () => {
+
+  controls                = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping  = true;
+  controls.enablePan      = false;
+  controls.enableRotate   = false;
+  controls.enableZoom     = true;
+  controls.minPolarAngle  = controls.maxPolarAngle = Math.PI / 2;
+  controls.minDistance    = 25;
+  controls.maxDistance    = 50;
+
+};
+
+
+const setLights = () => {
+
+  RectAreaLightUniformsLib.init();
+  const rectLight = new THREE.RectAreaLight(
+    0xffffff,
+    1000,
+    5,
+    5
+  );
+  rectLight.position.set(0, 0, -100);
+  rectLight.lookAt(0, 0, -200);
+
+  scene.add(rectLight);
+  scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 1));
+
+};
+
 
 const setOuterSphere = () => {
 
@@ -99,8 +159,7 @@ const setOuterSphere = () => {
 const setCleanMemGroup = () => {
 
   cleanMemGroup = new THREE.Group();
-  cleanMemGroup.scale.set(40, 40, 40);
-  cleanMemGroup.position.set(0, 0, -200);
+  cleanMemGroup.position.set(200, 0, -100);
 
   allObjects[2] = cleanMemGroup;
   scene.add(cleanMemGroup);
@@ -110,8 +169,7 @@ const setCleanMemGroup = () => {
 const setKeepInMemGroup = () => {
 
   keepInMemGroup  = new THREE.Group();
-  keepInMemGroup.scale.set(40, 40, 40);
-  keepInMemGroup.position.set(0, 0, -200);
+  keepInMemGroup.position.set(200, 0, -100);
 
   allObjects[3] = keepInMemGroup;
   scene.add(keepInMemGroup);
@@ -173,11 +231,13 @@ const useThreeLOD = async (details) => {
 
     const model = await gltfLoader.loadAsync(details[i].asset);
     model.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
-    model.scene.position.set(0, details[i].posYAdjustment, -200);
+    model.scene.position.y = details[i].posYAdjustment;
+    outlinePass.selectedObjects.push(model.scene);
     lodModel.addLevel(model.scene, details[i].distance);
     
   }
 
+  lodModel.position.set(200, 0, -100);
   allObjects[1] = lodModel;
   scene.add(lodModel);
 
@@ -224,6 +284,8 @@ const cleanMemoryLOD = (details) => {
         && distance < nextDistance
         && details[i].asset !== loadedAsset) gltfLoader.load(details[i].asset, (gltf) => {
             cleanMemGroup.remove(...cleanMemGroup.children);
+            gltf.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
+            outlinePass.selectedObjects.push(gltf.scene);
             cleanMemGroup.add(gltf.scene);
             loadedAsset = details[i].asset;
           });
@@ -278,7 +340,9 @@ const keepInMemoryLOD = (details) => {
           assetLoading = true;
 
           gltfLoader.load(details[i].asset, (gltf) => {
+            gltf.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
             gltf.scene.name = details[i].asset;
+            outlinePass.selectedObjects.push(gltf.scene);
             keepInMemGroup.add(gltf.scene);
             assetLoading = false;
             return;
@@ -303,7 +367,7 @@ const terrainToPlane = async () => {
 
   let   plane;
   const lodTerrain  = new THREE.LOD();
-  const model       = await gltfLoader.loadAsync('terrain/scene.gltf');
+  const model       = await gltfLoader.loadAsync('img/terrain/scene.gltf');
 
   model.scene.traverse(obj => {
     if(obj instanceof THREE.Mesh) {
@@ -318,18 +382,20 @@ const terrainToPlane = async () => {
       };
 
       const geometry    = new THREE.PlaneGeometry(size.width, size.depth);
-      const texture     = new THREE.TextureLoader().load('terrain/textures/Hills_baseColor.png');
+      const texture     = new THREE.TextureLoader().load('img/terrain/textures/Hills_baseColor.png');
       texture.flipY     = false;
       const material    = new THREE.MeshLambertMaterial({map: texture, side: THREE.DoubleSide});
       plane             = new THREE.Mesh(geometry, material);
       plane.rotation.x  = -(Math.PI / 2) * 0.7;
+      outlinePass.selectedObjects.push(plane);
 
     }
   });
 
   model.scene.rotation.x = 0.6;
+  outlinePass.selectedObjects.push(model.scene);
 
-  lodTerrain.position.set(0, 0, -200);
+  lodTerrain.position.set(200, 0, -100);
   lodTerrain.scale.set(10, 10, 10);
 
   lodTerrain.addLevel(model.scene, 50);
@@ -340,26 +406,105 @@ const terrainToPlane = async () => {
 
 }
 
-const loopThrough = () => {
+const loopThrough = (next) => {
 
-  const tl = gsap.timeline();
-  if(activeObj >= 0) {
-    tl
-    .to(allObjects[activeObj].position, {
-      z:        -200,
-      duration: 2
-    })
-    .to(allObjects[activeObj + 1 > activeObj.length - 1 ? 0 : activeObj + 1].position, {
+  backBtn.disabled  = true;
+  nextBtn.disabled  = true;
+  rotateObj         = false;
+  const tl          = gsap.timeline();
+
+  if(activeObj < 0) {
+    tl.to(allObjects[0].position, {
       z:        0,
       duration: 2
     });
+    activeObj++;
+    rotateObj         = true;
+    backBtn.disabled  = false;
+    nextBtn.disabled  = false;
     return;
   }
 
-  tl.to(allObjects[0].position, {
-    z:        0,
-    duration: 2
-  });
+  const previousModel = () => {
+
+    const previousActiveObj = activeObj - 1 === -1 ? 4 : activeObj - 1;
+
+    allObjects[previousActiveObj].position.x = -200;
+    allObjects[previousActiveObj].position.z = -100;
+
+    tl
+    .to(allObjects[activeObj].position, {
+      z:        -100,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    })
+    .to(allObjects[activeObj].position, {
+      x:        200,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    }, 0.7)
+    .to(allObjects[previousActiveObj].position, {
+        x:        0,
+        duration: 1.5,
+        ease:     Sine.easeInOut
+    }, 1.5)
+    .to(allObjects[previousActiveObj].position, {
+      z:        0,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    }, 2.2)
+    .then(() => {
+      allObjects[activeObj].rotation.y = 0;
+      activeObj         = previousActiveObj;
+      time              = 0;
+      rotateObj         = true;
+      backBtn.disabled  = false;
+      nextBtn.disabled  = false;
+    });
+
+  }
+
+  const nextModel = () => {
+
+    const nextActiveObj = activeObj + 1 === allObjects.length ? 0 : activeObj + 1;
+
+    allObjects[nextActiveObj].position.x = 200;
+    allObjects[nextActiveObj].position.z = -100;
+
+    tl
+    .to(allObjects[activeObj].position, {
+      z:        -100,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    })
+    .to(allObjects[activeObj].position, {
+      x:        -200,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    }, 0.7)
+    .to(allObjects[nextActiveObj].position, {
+        x:        0,
+        duration: 1.5,
+        ease:     Sine.easeInOut
+    }, 1.5)
+    .to(allObjects[nextActiveObj].position, {
+      z:        0,
+      duration: 1.5,
+      ease:     Sine.easeInOut
+    }, 2.2)
+    .then(() => {
+      allObjects[activeObj].rotation.y = 0;
+      activeObj         = nextActiveObj;
+      time              = 0;
+      rotateObj         = true;
+      backBtn.disabled  = false;
+      nextBtn.disabled  = false;
+    });
+
+  }
+
+  if(next) nextModel();
+  else previousModel();
 
 }
 
@@ -374,12 +519,15 @@ const resize = () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize(sizes.width, sizes.height);
+  composer.setSize(sizes.width, sizes.height);
 
 }
 
 const listenTo = () => {
 
   window.addEventListener('resize', resize.bind(this));
+  backBtn.addEventListener('click', loopThrough.bind(this, false));
+  nextBtn.addEventListener('click', loopThrough.bind(this, true));
   controls.addEventListener('change', () => {
     cleanMemoryLOD(rockLOD);
     keepInMemoryLOD(rockLOD);
@@ -389,8 +537,11 @@ const listenTo = () => {
 
 const render = () => {
 
+  time += 0.002;
+  if(allObjects[activeObj] && rotateObj) allObjects[activeObj].rotation.y = time;
+
   controls.update();
-  renderer.render(scene, camera);
+  composer.render();
   requestAnimationFrame(render.bind(this))
 
 }

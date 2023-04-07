@@ -50,7 +50,7 @@ html, body {
   color: #fff;
   cursor: pointer;
   background: inherit;
-  transition: 400ms ease-in-out;
+  transition: 200ms ease-in-out;
 } 
 .nav_btn:hover {
   gap: 25px;
