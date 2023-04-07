@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+  <head>
+
+    <title>Level of Detail</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="img/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.151.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.151.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js" integrity="sha512-cOH8ndwGgPo+K7pTvMrqYbmI8u8k6Sho3js0gOqVWTmQMlLIi6TbqGWRTpf1ga8ci9H3iPsvDLr4X7xwhC/+DQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  </head>
+
+
+  <body>
+
+    <div class="title_container">
+      <h2 class="title">THREE.LOD Geometry</h2>
+      <h6 class="zoom_indicator">Zoom to trigger detail update</h6>
+    </div>
+
+    <div class="container">
+      <canvas class="canvas"></canvas>
+    </div>
+
+    <div class="about_container">
+      <button class="btn about_back_btn">
+        <svg width="18px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" transform="rotate(0)">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+          <g id="SVGRepo_iconCarrier"> <title/> <g id="Complete"> <g id="arrow-left"> <g> <polyline data-name="Right" fill="none" id="Right-2" points="7.6 7 2.5 12 7.6 17" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/> <line fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="21.5" x2="4.8" y1="12" y2="12"/> </g> </g> </g> </g>
+        </svg>
+      </button>
+      <div class="about_text_container">
+        <p class="about_text">
+          A wireframe of a sphere using THREE.LOD. 
+          The closer the camera gets to the sphere, the more detailed the sphere becomes (more verticies). 
+          The further away the camera get from the sphere, the less deatiled the sphere becomes.
+        </p>
+      </div>
+    </div>
+
+    <div class="about_button_container">
+      <button class="btn about_btn">
+        <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25px" viewBox="0 0 416.979 416.979" xml:space="preserve" stroke="#ffffff">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> 
+          <g> <path d="M356.004,61.156c-81.37-81.47-213.377-81.551-294.848-0.182c-81.47,81.371-81.552,213.379-0.181,294.85 c81.369,81.47,213.378,81.551,294.849,0.181C437.293,274.636,437.375,142.626,356.004,61.156z M237.6,340.786 c0,3.217-2.607,5.822-5.822,5.822h-46.576c-3.215,0-5.822-2.605-5.822-5.822V167.885c0-3.217,2.607-5.822,5.822-5.822h46.576 c3.215,0,5.822,2.604,5.822,5.822V340.786z M208.49,137.901c-18.618,0-33.766-15.146-33.766-33.765 c0-18.617,15.147-33.766,33.766-33.766c18.619,0,33.766,15.148,33.766,33.766C242.256,122.755,227.107,137.901,208.49,137.901z"></path> </g> </g>
+        </svg>
+        About
+      </button>
+    </div>
+
+    <div class="nav">
+      <button class="btn back">
+        <svg width="25px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" transform="rotate(0)">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+          <g id="SVGRepo_iconCarrier"> <title/> <g id="Complete"> <g id="arrow-left"> <g> <polyline data-name="Right" fill="none" id="Right-2" points="7.6 7 2.5 12 7.6 17" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/> <line fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="21.5" x2="4.8" y1="12" y2="12"/> </g> </g> </g> </g>
+        </svg>
+        Back
+      </button>
+      <button class="btn next">
+        Next
+        <svg width="25px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" transform="rotate(180)">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+          <g id="SVGRepo_iconCarrier"> <title/> <g id="Complete"> <g id="arrow-left"> <g> <polyline data-name="Right" fill="none" id="Right-2" points="7.6 7 2.5 12 7.6 17" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/> <line fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="21.5" x2="4.8" y1="12" y2="12"/> </g> </g> </g> </g>
+        </svg>
+      </button>
+    </div>
+
+    <div class="source_code">
+      <button class="btn source_btn" onclick="window.open('https://github.com/jessehhydee/level-of-detail','_blank')">
+        <svg width="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier"> <g id="System / Code"> <path id="Vector" d="M15 7L20 12L15 17M9 17L4 12L9 7" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g> </g>
+        </svg>
+      </button>
+    </div>
+
+    <script src="index.js" type="module"></script>
+
+  </body>
+
+</html>

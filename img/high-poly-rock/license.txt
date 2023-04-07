@@ -1,0 +1,11 @@
+Model Information:
+* title:	Rock
+* source:	https://sketchfab.com/3d-models/rock-d3d3c9d73f8e4554b5115073824c3f12
+* author:	Josiah Holcom (https://sketchfab.com/epicjodog)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Rock" (https://sketchfab.com/3d-models/rock-d3d3c9d73f8e4554b5115073824c3f12) by Josiah Holcom (https://sketchfab.com/epicjodog) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
