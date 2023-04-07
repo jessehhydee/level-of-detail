@@ -8,10 +8,16 @@ import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
 
-const container = document.querySelector('.container');
-const canvas    = document.querySelector('.canvas');
-const backBtn   = document.querySelector('.back');
-const nextBtn   = document.querySelector('.next');
+const aboutContainer  = document.querySelector('.about_container');
+const aboutBackBtn    = document.querySelector('.about_back_btn');
+const aboutText       = document.querySelector('.about_text');
+const aboutBtn        = document.querySelector('.about_btn');
+const titleContainer  = document.querySelector('.title_container');
+const title           = document.querySelector('.title');
+const container       = document.querySelector('.container');
+const canvas          = document.querySelector('.canvas');
+const backBtn         = document.querySelector('.back');
+const nextBtn         = document.querySelector('.next');
 
 let 
 time,
@@ -31,7 +37,8 @@ cleanMemGroup,
 keepInMemGroup,
 gltfLoader,
 assetLoading,
-loadedAsset;
+loadedAsset,
+aboutContent;
 
 time          = 0;
 rotateObj     = false;
@@ -51,6 +58,13 @@ rockLOD       = [
     scale:          new THREE.Vector3(800, 800, 800),
     posYAdjustment: 0
   }
+];
+aboutContent = [
+  'A wireframe of a sphere using THREE.LOD. The closer the camera gets to the sphere, the more detailed the sphere becomes (more verticies). The further away the camera get from the sphere, the less deatiled the sphere becomes.',
+  'A 3D model using THREE.LOD. As the camera gets closer to the model, the model is replaced with a new model containing more detail. If the camera gets further away, the model chagnes again to the less detailed model.',
+  'A 3D model using a self written LOD method which only loads gltf assets when needed and clears non-needed assets from memory.',
+  'A 3D model using a self written LOD method which only loads gltf assets when needed and but keeps/holds non-needed assets in memory for a more responsive toggle between assets when the users reaches different LOD levels.',
+  'A 3D model that is only "3D" when the user is near it. Otherwise it is simply a plane wrapped in the 3D models texture. This example uses THREE.LOD.'
 ];
 
 
@@ -160,6 +174,7 @@ const setCleanMemGroup = () => {
 
   cleanMemGroup = new THREE.Group();
   cleanMemGroup.position.set(200, 0, -100);
+  cleanMemGroup.name = 'Lazy Load & Clear Memory';
 
   allObjects[2] = cleanMemGroup;
   scene.add(cleanMemGroup);
@@ -170,6 +185,7 @@ const setKeepInMemGroup = () => {
 
   keepInMemGroup  = new THREE.Group();
   keepInMemGroup.position.set(200, 0, -100);
+  keepInMemGroup.name = 'Lazy Load & Keep Memory';
 
   allObjects[3] = keepInMemGroup;
   scene.add(keepInMemGroup);
@@ -209,6 +225,7 @@ const createWireframe = () => {
   }
 
   lod.position.set(0, 0, -200);
+  lod.name = 'THREE.LOD with Geometry';
   allObjects[0] = lod;
   scene.add(lod);
 
@@ -238,6 +255,7 @@ const useThreeLOD = async (details) => {
   }
 
   lodModel.position.set(200, 0, -100);
+  lodModel.name = 'THREE.LOD with Model';
   allObjects[1] = lodModel;
   scene.add(lodModel);
 
@@ -262,7 +280,7 @@ const useThreeLOD = async (details) => {
 
    Loop through @var details
    For each level, capture the next levels distance threshold.
-   If there isn't a next level, the next distance will be 100000 (for no particualr reason other then it's far away).
+   If there isn't a next level, the next distance will be 100000 (for no particular reason other then it's far away).
 
    If asset not currently loaded and the distance is in the range of the assets level, load the new GLTF.
    After loading, clear everything in cleanMemGroup.
@@ -285,6 +303,7 @@ const cleanMemoryLOD = (details) => {
         && details[i].asset !== loadedAsset) gltfLoader.load(details[i].asset, (gltf) => {
             cleanMemGroup.remove(...cleanMemGroup.children);
             gltf.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
+            gltf.scene.position.y = details[i].posYAdjustment;
             outlinePass.selectedObjects.push(gltf.scene);
             cleanMemGroup.add(gltf.scene);
             loadedAsset = details[i].asset;
@@ -313,7 +332,7 @@ const cleanMemoryLOD = (details) => {
 
    Loop through @var details
    For each level, capture the next levels distance threshold.
-   If there isn't a next level, the next distance will be 100000 (for no particualr reason other then it's far away).
+   If there isn't a next level, the next distance will be 100000 (for no particular reason other then it's far away).
 
    If asset not currently loaded within keepInMemGroup and the distance is in the range of the assets level, 
    and a asset is not currently loading (this process isn't already happening in the dom), load gltf asset.
@@ -325,7 +344,7 @@ const cleanMemoryLOD = (details) => {
  */
 const keepInMemoryLOD = (details) => {
 
-  const distance = camera.position.distanceTo(new THREE.Vector3(340, 0, 0));
+  const distance = camera.position.distanceTo(new THREE.Vector3(0, 0, 0));
 
   for(let i = 0; i < details.length; i++) {
 
@@ -341,10 +360,11 @@ const keepInMemoryLOD = (details) => {
 
           gltfLoader.load(details[i].asset, (gltf) => {
             gltf.scene.scale.set(details[i].scale.x, details[i].scale.y, details[i].scale.z);
+            gltf.scene.position.y = details[i].posYAdjustment;
             gltf.scene.name = details[i].asset;
             outlinePass.selectedObjects.push(gltf.scene);
             keepInMemGroup.add(gltf.scene);
-            assetLoading = false;
+            assetLoading = false; 
             return;
           });
 
@@ -397,9 +417,10 @@ const terrainToPlane = async () => {
 
   lodTerrain.position.set(200, 0, -100);
   lodTerrain.scale.set(10, 10, 10);
+  lodTerrain.name = 'Terrain to Plane';
 
-  lodTerrain.addLevel(model.scene, 50);
-  lodTerrain.addLevel(plane, 80);
+  lodTerrain.addLevel(model.scene, 0);
+  lodTerrain.addLevel(plane, 36);
 
   allObjects[4] = lodTerrain;
   scene.add(lodTerrain);
@@ -423,6 +444,21 @@ const loopThrough = (next) => {
     backBtn.disabled  = false;
     nextBtn.disabled  = false;
     return;
+  }
+
+  titleContainer.style.opacity    = 0;
+  titleContainer.style.transform  = 'translateX(-100%)';
+  aboutContainer.style.opacity    = 0;
+  aboutContainer.style.transform  = 'translateX(-100%)';
+
+  const updateInfo = (titleText, aboutInfo) => {
+
+    title.textContent               = titleText;
+    titleContainer.style.opacity    = 1;
+    titleContainer.style.transform  = 'translateX(0)';
+
+    aboutText.textContent = aboutInfo;
+    
   }
 
   const previousModel = () => {
@@ -460,6 +496,7 @@ const loopThrough = (next) => {
       rotateObj         = true;
       backBtn.disabled  = false;
       nextBtn.disabled  = false;
+      updateInfo(allObjects[activeObj].name, aboutContent[activeObj]);
     });
 
   }
@@ -499,6 +536,7 @@ const loopThrough = (next) => {
       rotateObj         = true;
       backBtn.disabled  = false;
       nextBtn.disabled  = false;
+      updateInfo(allObjects[activeObj].name, aboutContent[activeObj]);
     });
 
   }
@@ -523,11 +561,26 @@ const resize = () => {
 
 }
 
+const toggleAboutInfo = (display) => {
+
+  if(display) {
+    aboutContainer.style.opacity    = 1;
+    aboutContainer.style.transform  = 'translateX(0)';
+  }
+  else {
+    aboutContainer.style.opacity    = 0;
+    aboutContainer.style.transform  = 'translateX(-100%)';
+  }
+
+}
+
 const listenTo = () => {
 
   window.addEventListener('resize', resize.bind(this));
   backBtn.addEventListener('click', loopThrough.bind(this, false));
   nextBtn.addEventListener('click', loopThrough.bind(this, true));
+  aboutBtn.addEventListener('click', toggleAboutInfo.bind(this, true));
+  aboutBackBtn.addEventListener('click', toggleAboutInfo.bind(this, false));
   controls.addEventListener('change', () => {
     cleanMemoryLOD(rockLOD);
     keepInMemoryLOD(rockLOD);
