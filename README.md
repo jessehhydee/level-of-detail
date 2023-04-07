@@ -5,7 +5,7 @@ A comparison on performance and rendering speed between three.js LOD tool and tw
 Level of detail is used to improve rendering performance. If an assets is not near the camera, there is no need to show it in great detail.
 A great example of LOD in practice is Google Earth.
 
-For info: https://threejs.org/docs/#api/en/objects/LOD
+For info: <a href="https://threejs.org/docs/#api/en/objects/LOD" target="_blank">https://threejs.org/docs/#api/en/objects/LOD</a>
 
 ### Viewer Contents:
 
@@ -39,7 +39,7 @@ The viewer application displays 5 LOD examples:
 
 ![alt text](https://github.com/jessehhydee/level-of-detail/blob/main/viewer/screenshots/terrain-to-plane.png?raw=true)
 
-To view, checkout: https://hydeit.co/level-of-detail
+To view, checkout: <a href="https://hydeit.co/level-of-detail/" target="_blank">https://hydeit.co/level-of-detail/</a>
 
 ### Tools
 
