@@ -160,13 +160,13 @@ const setLights = () => {
 
 const setOuterSphere = () => {
 
-  const panoSphere    = new THREE.SphereGeometry(160, 50, 50);
-  const panoMaterial  = new THREE.MeshStandardMaterial({
+  const outerSphere    = new THREE.SphereGeometry(160, 50, 50);
+  const outerMaterial  = new THREE.MeshStandardMaterial({
     color:  new THREE.Color(0, 0.133, 0.118),
     side:   DoubleSide,
   });
 
-  scene.add(new THREE.Mesh(panoSphere, panoMaterial));
+  scene.add(new THREE.Mesh(outerSphere, outerMaterial));
   
 }
 
